@@ -6,47 +6,30 @@ local UserInputService = game:GetService("UserInputService")
 
 local Library = {}
 Library.Tree = {}
-Library.IsOpen = true
+Library.IsOpen = true -- Track GUI visibility state
 
 function Library:new()
-    -- ScreenGui
+    -- Create ScreenGui
     Library.Tree["1"] = Instance.new("ScreenGui", RunService:IsStudio() and Players.LocalPlayer:WaitForChild("PlayerGui") or CoreGui)
     Library.Tree["1"].Name = "MyLibrary"
     Library.Tree["1"].ResetOnSpawn = false
 
-    -- Main Frame
+    -- Create Main Frame
     Library.Tree["2"] = Instance.new("Frame", Library.Tree["1"])
+    Library.Tree["2"].BackgroundColor3 = Color3.fromRGB(41, 41, 41)
     Library.Tree["2"].AnchorPoint = Vector2.new(0.5, 0.5)
     Library.Tree["2"].Size = UDim2.new(0, 400, 0, 300)
     Library.Tree["2"].Position = UDim2.new(0.5, 0, 0.5, 0)
-    Library.Tree["2"].BorderSizePixel = 0
+    Library.Tree["2"].BorderSizePixel = 1
+    Library.Tree["2"].BorderColor3 = Color3.fromRGB(255, 0, 0)
     Library.Tree["2"].Name = "Main"
     Library.Tree["2"].Visible = Library.IsOpen
 
-    -- Gradient
-    local gradient = Instance.new("UIGradient", Library.Tree["2"])
-    gradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 182, 193)), -- Pink pastel
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(173, 216, 230))  -- Biru pastel
-    }
-    gradient.Rotation = 45
+    -- Add UICorner
+    Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
+    Library.Tree["3"].CornerRadius = UDim.new(0, 6)
 
-    -- Corner
-    local corner = Instance.new("UICorner", Library.Tree["2"])
-    corner.CornerRadius = UDim.new(0, 12)
-
-    -- Shadow effect
-    local shadow = Instance.new("ImageLabel", Library.Tree["2"])
-    shadow.Name = "Shadow"
-    shadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    shadow.Position = UDim2.new(0.5, 0, 0.5, 8)
-    shadow.Size = UDim2.new(1, 30, 1, 30)
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://5028857084"
-    shadow.ImageTransparency = 0.5
-    shadow.ZIndex = -1
-
-    -- Logo (close)
+    -- Add Logo in Main Frame (for closing)
     local logo = Instance.new("ImageLabel", Library.Tree["2"])
     logo.Name = "Logo"
     logo.Size = UDim2.new(0, 30, 0, 30)
@@ -54,66 +37,73 @@ function Library:new()
     logo.BackgroundTransparency = 1
     logo.Image = "rbxassetid://85943969078902"
 
+    -- Add clickable button overlay for main frame logo
     local logoButtonMain = Instance.new("TextButton", Library.Tree["2"])
     logoButtonMain.Size = UDim2.new(0, 30, 0, 30)
     logoButtonMain.Position = UDim2.new(0, 5, 0, 5)
     logoButtonMain.BackgroundTransparency = 1
     logoButtonMain.Text = ""
+    logoButtonMain.ZIndex = logo.ZIndex + 1
 
-    -- Logo reopen
+    -- Add Logo Button in ScreenGui (for reopening)
     local logoButtonScreen = Instance.new("ImageButton", Library.Tree["1"])
     logoButtonScreen.Name = "LogoButtonScreen"
     logoButtonScreen.Size = UDim2.new(0, 30, 0, 30)
-    logoButtonScreen.Position = UDim2.new(0.5, -195, 0.5, -145)
+    logoButtonScreen.Position = UDim2.new(0.5, -195, 0.5, -145) -- Aligned with main frame logo
     logoButtonScreen.BackgroundTransparency = 1
     logoButtonScreen.Image = "rbxassetid://85943969078902"
-    logoButtonScreen.Visible = not Library.IsOpen
+    logoButtonScreen.Visible = not Library.IsOpen -- Visible when GUI is closed
 
-    -- Toggle animasi
+    -- Toggle GUI visibility function
     local function toggleGui()
         Library.IsOpen = not Library.IsOpen
-        if Library.IsOpen then
-            Library.Tree["2"].Visible = true
-            TweenService:Create(Library.Tree["2"], TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0, 400, 0, 300), Transparency = 0}):Play()
-        else
-            local tween = TweenService:Create(Library.Tree["2"], TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), Transparency = 1})
-            tween:Play()
-            tween.Completed:Connect(function()
-                if not Library.IsOpen then
-                    Library.Tree["2"].Visible = false
-                end
-            end)
-        end
-        logoButtonScreen.Visible = not Library.IsOpen
+        Library.Tree["2"].Visible = Library.IsOpen
+        logoButtonScreen.Visible = not Library.IsOpen -- Show screen logo when GUI is closed
     end
 
+    -- Connect logo buttons
     logoButtonMain.MouseButton1Click:Connect(toggleGui)
     logoButtonScreen.MouseButton1Click:Connect(toggleGui)
 
-    -- Tab Container
+    -- Create TabContainer
     Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
     Library.Tree["4"].Name = "TabContainer"
-    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -40)
+    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -40) -- Adjusted for logo
     Library.Tree["4"].Position = UDim2.new(0, 0, 0, 40)
-    Library.Tree["4"].BackgroundTransparency = 0.2
     Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 
+    -- Add UIListLayout for TabContainer
     local listLayout = Instance.new("UIListLayout", Library.Tree["4"])
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Padding = UDim.new(0, 5)
 
-    -- Drag
+    -- Drag functionality
     local dragging, dragInput, dragStart, startPos
+
     local function update(input)
         local delta = input.Position - dragStart
-        Library.Tree["2"].Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        logoButtonScreen.Position = UDim2.new(0, Library.Tree["2"].Position.X.Offset - 195, 0, Library.Tree["2"].Position.Y.Offset - 145)
+        Library.Tree["2"].Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+
+        -- Update reopen logo position relative to MainFrame
+        logoButtonScreen.Position = UDim2.new(
+            0,
+            Library.Tree["2"].Position.X.Offset - 195,
+            0,
+            Library.Tree["2"].Position.Y.Offset - 145
+        )
     end
+
     Library.Tree["2"].InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             dragStart = input.Position
             startPos = Library.Tree["2"].Position
+            
             input.Changed:Connect(function()
                 if input.UserInputState == Enum.UserInputState.End then
                     dragging = false
@@ -121,60 +111,52 @@ function Library:new()
             end)
         end
     end)
+
     Library.Tree["2"].InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
             dragInput = input
         end
     end)
+
     UserInputService.InputChanged:Connect(function(input)
         if input == dragInput and dragging then
             update(input)
         end
     end)
 
-    -- Create Window
     function Library:CreateWindow(title)
         local window = Instance.new("Frame", Library.Tree["2"])
         window.Name = title
-        window.BackgroundTransparency = 0.2
         window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        window.Size = UDim2.new(1, -100, 1, -40)
+        window.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        window.Size = UDim2.new(1, -100, 1, -40) -- Adjusted for header
         window.Position = UDim2.new(0, 100, 0, 40)
         window.Visible = false
 
         local titleLabel = Instance.new("TextLabel", window)
         titleLabel.Text = title
-        titleLabel.TextColor3 = Color3.fromRGB(50, 50, 50)
+        titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
         titleLabel.Size = UDim2.new(1, 0, 0, 30)
-        titleLabel.BackgroundColor3 = Color3.fromRGB(255, 228, 225)
+        titleLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
         titleLabel.BorderSizePixel = 0
         titleLabel.TextSize = 16
-        titleLabel.Font = Enum.Font.GothamBold
+        titleLabel.Font = Enum.Font.SourceSans
 
         local windowLayout = Instance.new("UIListLayout", window)
         windowLayout.SortOrder = Enum.SortOrder.LayoutOrder
         windowLayout.Padding = UDim.new(0, 5)
+
         return window
     end
 
-    -- Tab Button
     function Library:CreateTabButton(text, window)
         local button = Instance.new("TextButton", Library.Tree["4"])
         button.Text = text
         button.Size = UDim2.new(1, 0, 0, 30)
-        button.BackgroundColor3 = Color3.fromRGB(255, 240, 245)
+        button.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
         button.BorderSizePixel = 0
         button.TextSize = 14
-        button.Font = Enum.Font.Gotham
-        button.AutoButtonColor = false
-
-        -- Hover animasi
-        button.MouseEnter:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 182, 193)}):Play()
-        end)
-        button.MouseLeave:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 240, 245)}):Play()
-        end)
+        button.Font = Enum.Font.SourceSans
 
         button.MouseButton1Click:Connect(function()
             for _, child in ipairs(Library.Tree["2"]:GetChildren()) do
@@ -188,7 +170,41 @@ function Library:new()
         return button
     end
 
-    -- Button
+    function Library:CreateToggle(text, initialValue, callback)
+        local toggleFrame = Instance.new("Frame")
+        toggleFrame.Size = UDim2.new(1, -10, 0, 30)
+        toggleFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        toggleFrame.BorderSizePixel = 0
+
+        local toggleLabel = Instance.new("TextLabel", toggleFrame)
+        toggleLabel.Text = text
+        toggleLabel.Size = UDim2.new(0.5, -5, 1, 0)
+        toggleLabel.Position = UDim2.new(0, 5, 0, 0)
+        toggleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+        toggleLabel.BorderSizePixel = 0
+        toggleLabel.BackgroundTransparency = 1
+        toggleLabel.TextSize = 14
+        toggleLabel.Font = Enum.Font.SourceSans
+
+        local toggleButton = Instance.new("TextButton", toggleFrame)
+        toggleButton.Size = UDim2.new(0.5, -5, 1, 0)
+        toggleButton.Position = UDim2.new(0.5, 5, 0, 0)
+        toggleButton.BackgroundColor3 = initialValue and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        toggleButton.BorderSizePixel = 0
+        toggleButton.Text = initialValue and "ON" or "OFF"
+        toggleButton.TextSize = 14
+        toggleButton.Font = Enum.Font.SourceSans
+
+        toggleButton.MouseButton1Click:Connect(function()
+            initialValue = not initialValue
+            callback(initialValue)
+            toggleButton.BackgroundColor3 = initialValue and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            toggleButton.Text = initialValue and "ON" or "OFF"
+        end)
+
+        return toggleFrame, toggleButton
+    end
+
     function Library:CreateButton(text, callback)
         local button = Instance.new("TextButton")
         button.Text = text
@@ -196,17 +212,10 @@ function Library:new()
         button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         button.TextColor3 = Color3.fromRGB(0, 0, 0)
         button.TextSize = 20
-        button.Font = Enum.Font.Gotham
-        button.AutoButtonColor = false
-
-        button.MouseEnter:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(144, 238, 144)}):Play()
-        end)
-        button.MouseLeave:Connect(function()
-            TweenService:Create(button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-        end)
+        button.Font = Enum.Font.SourceSans
 
         button.MouseButton1Click:Connect(callback)
+
         return button
     end
 
