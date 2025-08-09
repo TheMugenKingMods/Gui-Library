@@ -29,7 +29,7 @@ function Library:new()
     Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
     Library.Tree["3"].CornerRadius = UDim.new(0, 6)
 
-    -- Add Logo with Clickable Button
+    -- Add Logo in Main Frame (for closing)
     local logo = Instance.new("ImageLabel", Library.Tree["2"])
     logo.Name = "Logo"
     logo.Size = UDim2.new(0, 30, 0, 30)
@@ -37,22 +37,33 @@ function Library:new()
     logo.BackgroundTransparency = 1
     logo.Image = "rbxassetid://85943969078902"
 
-    -- Add clickable button overlay for logo
-    local logoButton = Instance.new("TextButton", Library.Tree["2"])
-    logoButton.Size = UDim2.new(0, 30, 0, 30)
-    logoButton.Position = UDim2.new(0, 5, 0, 5)
-    logoButton.BackgroundTransparency = 1
-    logoButton.Text = ""
-    logoButton.ZIndex = logo.ZIndex + 1 -- Ensure button is above logo
+    -- Add clickable button overlay for main frame logo
+    local logoButtonMain = Instance.new("TextButton", Library.Tree["2"])
+    logoButtonMain.Size = UDim2.new(0, 30, 0, 30)
+    logoButtonMain.Position = UDim2.new(0, 5, 0, 5)
+    logoButtonMain.BackgroundTransparency = 1
+    logoButtonMain.Text = ""
+    logoButtonMain.ZIndex = logo.ZIndex + 1
+
+    -- Add Logo Button in ScreenGui (for reopening)
+    local logoButtonScreen = Instance.new("ImageButton", Library.Tree["1"])
+    logoButtonScreen.Name = "LogoButtonScreen"
+    logoButtonScreen.Size = UDim2.new(0, 30, 0, 30)
+    logoButtonScreen.Position = UDim2.new(0.5, -195, 0.5, -145) -- Aligned with main frame logo
+    logoButtonScreen.BackgroundTransparency = 1
+    logoButtonScreen.Image = "rbxassetid://85943969078902"
+    logoButtonScreen.Visible = not Library.IsOpen -- Visible when GUI is closed
 
     -- Toggle GUI visibility function
     local function toggleGui()
         Library.IsOpen = not Library.IsOpen
         Library.Tree["2"].Visible = Library.IsOpen
+        logoButtonScreen.Visible = not Library.IsOpen -- Show screen logo when GUI is closed
     end
 
-    -- Connect logo button
-    logoButton.MouseButton1Click:Connect(toggleGui)
+    -- Connect logo buttons
+    logoButtonMain.MouseButton1Click:Connect(toggleGui)
+    logoButtonScreen.MouseButton1Click:Connect(toggleGui)
 
     -- Create TabContainer
     Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
@@ -76,6 +87,14 @@ function Library:new()
             startPos.X.Offset + delta.X,
             startPos.Y.Scale,
             startPos.Y.Offset + delta.Y
+        )
+
+        -- Update reopen logo position relative to MainFrame
+        logoButtonScreen.Position = UDim2.new(
+            0,
+            Library.Tree["2"].Position.X.Offset - 195,
+            0,
+            Library.Tree["2"].Position.Y.Offset - 145
         )
     end
 
@@ -123,7 +142,6 @@ function Library:new()
         titleLabel.TextSize = 16
         titleLabel.Font = Enum.Font.SourceSans
 
-        -- Add UIListLayout for window content
         local windowLayout = Instance.new("UIListLayout", window)
         windowLayout.SortOrder = Enum.SortOrder.LayoutOrder
         windowLayout.Padding = UDim.new(0, 5)
@@ -153,7 +171,7 @@ function Library:new()
     end
 
     function Library:CreateToggle(text, initialValue, callback)
-        local toggleFrame = Instance.new("Frame") -- No parent yet
+        local toggleFrame = Instance.new("Frame")
         toggleFrame.Size = UDim2.new(1, -10, 0, 30)
         toggleFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
         toggleFrame.BorderSizePixel = 0
@@ -188,7 +206,7 @@ function Library:new()
     end
 
     function Library:CreateButton(text, callback)
-        local button = Instance.new("TextButton") -- No parent yet
+        local button = Instance.new("TextButton")
         button.Text = text
         button.Size = UDim2.new(0, 200, 0, 50)
         button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
