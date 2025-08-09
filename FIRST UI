@@ -6,6 +6,8 @@ local UserInputService = game:GetService("UserInputService")
 
 local Library = {}
 Library.Tree = {}
+Library.IsOpen = true -- Track GUI visibility state
+Library.Keybind = Enum.KeyCode.F -- Default keybind
 
 function Library:new()
     -- Create ScreenGui
@@ -22,6 +24,7 @@ function Library:new()
     Library.Tree["2"].BorderSizePixel = 1
     Library.Tree["2"].BorderColor3 = Color3.fromRGB(255, 0, 0)
     Library.Tree["2"].Name = "Main"
+    Library.Tree["2"].Visible = Library.IsOpen
 
     -- Add UICorner
     Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
@@ -30,15 +33,45 @@ function Library:new()
     -- Create TabContainer
     Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
     Library.Tree["4"].Name = "TabContainer"
-    Library.Tree["4"].Size = UDim2.new(0, 100, 1, 0)
-    Library.Tree["4"].Position = UDim2.new(0, 0, 0, 0)
+    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -30) -- Adjusted for toggle button
+    Library.Tree["4"].Position = UDim2.new(0, 0, 0, 30)
     Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 
+    -- Add UIListLayout for TabContainer
+    local listLayout = Instance.new("UIListLayout", Library.Tree["4"])
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 5)
+
+    -- Create Open/Close Toggle Button
+    local toggleGuiButton = Instance.new("TextButton", Library.Tree["2"])
+    toggleGuiButton.Size = UDim2.new(0, 50, 0, 30)
+    toggleGuiButton.Position = UDim2.new(1, -55, 0, 5)
+    toggleGuiButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    toggleGuiButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+    toggleGuiButton.Text = Library.IsOpen and "Close" or "Open"
+    toggleGuiButton.TextSize = 14
+    toggleGuiButton.Font = Enum.Font.SourceSans
+    toggleGuiButton.BorderSizePixel = 0
+
+    -- Toggle GUI visibility function
+    local function toggleGui()
+        Library.IsOpen = not Library.IsOpen
+        Library.Tree["2"].Visible = Library.IsOpen
+        toggleGuiButton.Text = Library.IsOpen and "Close" or "Open"
+    end
+
+    -- Connect toggle button
+    toggleGuiButton.MouseButton1Click:Connect(toggleGui)
+
+    -- Keybind for toggling GUI
+    UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+        if not gameProcessedEvent and input.KeyCode == Library.Keybind then
+            toggleGui()
+        end
+    end)
+
     -- Drag functionality
-    local dragging
-    local dragInput
-    local dragStart
-    local startPos
+    local dragging, dragInput, dragStart, startPos
 
     local function update(input)
         local delta = input.Position - dragStart
@@ -81,8 +114,8 @@ function Library:new()
         window.Name = title
         window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         window.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        window.Size = UDim2.new(1, -100, 1, 0)
-        window.Position = UDim2.new(0, 100, 0, 0)
+        window.Size = UDim2.new(1, -100, 1, -30) -- Adjusted for header
+        window.Position = UDim2.new(0, 100, 0, 30)
         window.Visible = false
 
         local titleLabel = Instance.new("TextLabel", window)
@@ -93,6 +126,11 @@ function Library:new()
         titleLabel.BorderSizePixel = 0
         titleLabel.TextSize = 16
         titleLabel.Font = Enum.Font.SourceSans
+
+        -- Add UIListLayout for window content
+        local windowLayout = Instance.new("UIListLayout", window)
+        windowLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        windowLayout.Padding = UDim.new(0, 5)
 
         return window
     end
@@ -119,9 +157,8 @@ function Library:new()
     end
 
     function Library:CreateToggle(text, initialValue, callback)
-        local toggleFrame = Instance.new("Frame", Library.Tree["2"])
-        toggleFrame.Size = UDim2.new(1, -100, 0, 30)
-        toggleFrame.Position = UDim2.new(0, 100, 0, 0)
+        local toggleFrame = Instance.new("Frame") -- No parent yet
+        toggleFrame.Size = UDim2.new(1, -10, 0, 30)
         toggleFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
         toggleFrame.BorderSizePixel = 0
 
@@ -153,20 +190,23 @@ function Library:new()
 
         return toggleFrame, toggleButton
     end
-    
+
     function Library:CreateButton(text, callback)
-        local button = Instance.new("TextButton", Library.Tree["2"])
+        local button = Instance.new("TextButton") -- No parent yet
         button.Text = text
         button.Size = UDim2.new(0, 200, 0, 50)
-        button.Position = UDim2.new(0.5, -100, 0.8, -25)
         button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         button.TextColor3 = Color3.fromRGB(0, 0, 0)
         button.TextSize = 20
         button.Font = Enum.Font.SourceSans
-        
+
         button.MouseButton1Click:Connect(callback)
-        
+
         return button
+    end
+
+    function Library:SetKeybind(keyCode)
+        Library.Keybind = keyCode
     end
 
     return Library
