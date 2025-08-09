@@ -29,7 +29,7 @@ function Library:new()
     Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
     Library.Tree["3"].CornerRadius = UDim.new(0, 6)
 
-    -- Add Logo
+    -- Add Logo with Clickable Button
     local logo = Instance.new("ImageLabel", Library.Tree["2"])
     logo.Name = "Logo"
     logo.Size = UDim2.new(0, 30, 0, 30)
@@ -37,31 +37,27 @@ function Library:new()
     logo.BackgroundTransparency = 1
     logo.Image = "rbxassetid://85943969078902"
 
-    -- Create Open/Close Toggle Button
-    local toggleGuiButton = Instance.new("TextButton", Library.Tree["2"])
-    toggleGuiButton.Size = UDim2.new(0, 50, 0, 30)
-    toggleGuiButton.Position = UDim2.new(1, -55, 0, 5)
-    toggleGuiButton.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    toggleGuiButton.TextColor3 = Color3.fromRGB(0, 0, 0)
-    toggleGuiButton.Text = Library.IsOpen and "Close" or "Open"
-    toggleGuiButton.TextSize = 14
-    toggleGuiButton.Font = Enum.Font.SourceSans
-    toggleGuiButton.BorderSizePixel = 0
+    -- Add clickable button overlay for logo
+    local logoButton = Instance.new("TextButton", Library.Tree["2"])
+    logoButton.Size = UDim2.new(0, 30, 0, 30)
+    logoButton.Position = UDim2.new(0, 5, 0, 5)
+    logoButton.BackgroundTransparency = 1
+    logoButton.Text = ""
+    logoButton.ZIndex = logo.ZIndex + 1 -- Ensure button is above logo
 
     -- Toggle GUI visibility function
     local function toggleGui()
         Library.IsOpen = not Library.IsOpen
         Library.Tree["2"].Visible = Library.IsOpen
-        toggleGuiButton.Text = Library.IsOpen and "Close" or "Open"
     end
 
-    -- Connect toggle button
-    toggleGuiButton.MouseButton1Click:Connect(toggleGui)
+    -- Connect logo button
+    logoButton.MouseButton1Click:Connect(toggleGui)
 
     -- Create TabContainer
     Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
     Library.Tree["4"].Name = "TabContainer"
-    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -40) -- Adjusted for logo and toggle button
+    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -40) -- Adjusted for logo
     Library.Tree["4"].Position = UDim2.new(0, 0, 0, 40)
     Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 
