@@ -7,7 +7,6 @@ local UserInputService = game:GetService("UserInputService")
 local Library = {}
 Library.Tree = {}
 Library.IsOpen = true -- Track GUI visibility state
-Library.Keybind = Enum.KeyCode.F -- Default keybind
 
 function Library:new()
     -- Create ScreenGui
@@ -30,17 +29,13 @@ function Library:new()
     Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
     Library.Tree["3"].CornerRadius = UDim.new(0, 6)
 
-    -- Create TabContainer
-    Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
-    Library.Tree["4"].Name = "TabContainer"
-    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -30) -- Adjusted for toggle button
-    Library.Tree["4"].Position = UDim2.new(0, 0, 0, 30)
-    Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-
-    -- Add UIListLayout for TabContainer
-    local listLayout = Instance.new("UIListLayout", Library.Tree["4"])
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 5)
+    -- Add Logo
+    local logo = Instance.new("ImageLabel", Library.Tree["2"])
+    logo.Name = "Logo"
+    logo.Size = UDim2.new(0, 30, 0, 30)
+    logo.Position = UDim2.new(0, 5, 0, 5)
+    logo.BackgroundTransparency = 1
+    logo.Image = "rbxassetid://85943969078902"
 
     -- Create Open/Close Toggle Button
     local toggleGuiButton = Instance.new("TextButton", Library.Tree["2"])
@@ -63,12 +58,17 @@ function Library:new()
     -- Connect toggle button
     toggleGuiButton.MouseButton1Click:Connect(toggleGui)
 
-    -- Keybind for toggling GUI
-    UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
-        if not gameProcessedEvent and input.KeyCode == Library.Keybind then
-            toggleGui()
-        end
-    end)
+    -- Create TabContainer
+    Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
+    Library.Tree["4"].Name = "TabContainer"
+    Library.Tree["4"].Size = UDim2.new(0, 100, 1, -40) -- Adjusted for logo and toggle button
+    Library.Tree["4"].Position = UDim2.new(0, 0, 0, 40)
+    Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+    -- Add UIListLayout for TabContainer
+    local listLayout = Instance.new("UIListLayout", Library.Tree["4"])
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 5)
 
     -- Drag functionality
     local dragging, dragInput, dragStart, startPos
@@ -114,8 +114,8 @@ function Library:new()
         window.Name = title
         window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         window.BorderColor3 = Color3.fromRGB(0, 0, 0)
-        window.Size = UDim2.new(1, -100, 1, -30) -- Adjusted for header
-        window.Position = UDim2.new(0, 100, 0, 30)
+        window.Size = UDim2.new(1, -100, 1, -40) -- Adjusted for header
+        window.Position = UDim2.new(0, 100, 0, 40)
         window.Visible = false
 
         local titleLabel = Instance.new("TextLabel", window)
@@ -203,10 +203,6 @@ function Library:new()
         button.MouseButton1Click:Connect(callback)
 
         return button
-    end
-
-    function Library:SetKeybind(keyCode)
-        Library.Keybind = keyCode
     end
 
     return Library
