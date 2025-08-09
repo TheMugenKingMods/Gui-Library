@@ -1,0 +1,175 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local UserInputService = game:GetService("UserInputService")
+
+local Library = {}
+Library.Tree = {}
+
+function Library:new()
+    -- Create ScreenGui
+    Library.Tree["1"] = Instance.new("ScreenGui", RunService:IsStudio() and Players.LocalPlayer:WaitForChild("PlayerGui") or CoreGui)
+    Library.Tree["1"].Name = "MyLibrary"
+    Library.Tree["1"].ResetOnSpawn = false
+
+    -- Create Main Frame
+    Library.Tree["2"] = Instance.new("Frame", Library.Tree["1"])
+    Library.Tree["2"].BackgroundColor3 = Color3.fromRGB(41, 41, 41)
+    Library.Tree["2"].AnchorPoint = Vector2.new(0.5, 0.5)
+    Library.Tree["2"].Size = UDim2.new(0, 400, 0, 300)
+    Library.Tree["2"].Position = UDim2.new(0.5, 0, 0.5, 0)
+    Library.Tree["2"].BorderSizePixel = 1
+    Library.Tree["2"].BorderColor3 = Color3.fromRGB(255, 0, 0)
+    Library.Tree["2"].Name = "Main"
+
+    -- Add UICorner
+    Library.Tree["3"] = Instance.new("UICorner", Library.Tree["2"])
+    Library.Tree["3"].CornerRadius = UDim.new(0, 6)
+
+    -- Create TabContainer
+    Library.Tree["4"] = Instance.new("Frame", Library.Tree["2"])
+    Library.Tree["4"].Name = "TabContainer"
+    Library.Tree["4"].Size = UDim2.new(0, 100, 1, 0)
+    Library.Tree["4"].Position = UDim2.new(0, 0, 0, 0)
+    Library.Tree["4"].BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+
+    -- Drag functionality
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        Library.Tree["2"].Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    Library.Tree["2"].InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = Library.Tree["2"].Position
+            
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    Library.Tree["2"].InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+
+    function Library:CreateWindow(title)
+        local window = Instance.new("Frame", Library.Tree["2"])
+        window.Name = title
+        window.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        window.BorderColor3 = Color3.fromRGB(0, 0, 0)
+        window.Size = UDim2.new(1, -100, 1, 0)
+        window.Position = UDim2.new(0, 100, 0, 0)
+        window.Visible = false
+
+        local titleLabel = Instance.new("TextLabel", window)
+        titleLabel.Text = title
+        titleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+        titleLabel.Size = UDim2.new(1, 0, 0, 30)
+        titleLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        titleLabel.BorderSizePixel = 0
+        titleLabel.TextSize = 16
+        titleLabel.Font = Enum.Font.SourceSans
+
+        return window
+    end
+
+    function Library:CreateTabButton(text, window)
+        local button = Instance.new("TextButton", Library.Tree["4"])
+        button.Text = text
+        button.Size = UDim2.new(1, 0, 0, 30)
+        button.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        button.BorderSizePixel = 0
+        button.TextSize = 14
+        button.Font = Enum.Font.SourceSans
+
+        button.MouseButton1Click:Connect(function()
+            for _, child in ipairs(Library.Tree["2"]:GetChildren()) do
+                if child:IsA("Frame") and child.Name ~= "TabContainer" then
+                    child.Visible = false
+                end
+            end
+            window.Visible = true
+        end)
+
+        return button
+    end
+
+    function Library:CreateToggle(text, initialValue, callback)
+        local toggleFrame = Instance.new("Frame", Library.Tree["2"])
+        toggleFrame.Size = UDim2.new(1, -100, 0, 30)
+        toggleFrame.Position = UDim2.new(0, 100, 0, 0)
+        toggleFrame.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        toggleFrame.BorderSizePixel = 0
+
+        local toggleLabel = Instance.new("TextLabel", toggleFrame)
+        toggleLabel.Text = text
+        toggleLabel.Size = UDim2.new(0.5, -5, 1, 0)
+        toggleLabel.Position = UDim2.new(0, 5, 0, 0)
+        toggleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+        toggleLabel.BorderSizePixel = 0
+        toggleLabel.BackgroundTransparency = 1
+        toggleLabel.TextSize = 14
+        toggleLabel.Font = Enum.Font.SourceSans
+
+        local toggleButton = Instance.new("TextButton", toggleFrame)
+        toggleButton.Size = UDim2.new(0.5, -5, 1, 0)
+        toggleButton.Position = UDim2.new(0.5, 5, 0, 0)
+        toggleButton.BackgroundColor3 = initialValue and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+        toggleButton.BorderSizePixel = 0
+        toggleButton.Text = initialValue and "ON" or "OFF"
+        toggleButton.TextSize = 14
+        toggleButton.Font = Enum.Font.SourceSans
+
+        toggleButton.MouseButton1Click:Connect(function()
+            initialValue = not initialValue
+            callback(initialValue)
+            toggleButton.BackgroundColor3 = initialValue and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 0, 0)
+            toggleButton.Text = initialValue and "ON" or "OFF"
+        end)
+
+        return toggleFrame, toggleButton
+    end
+    
+    function Library:CreateButton(text, callback)
+        local button = Instance.new("TextButton", Library.Tree["2"])
+        button.Text = text
+        button.Size = UDim2.new(0, 200, 0, 50)
+        button.Position = UDim2.new(0.5, -100, 0.8, -25)
+        button.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        button.TextColor3 = Color3.fromRGB(0, 0, 0)
+        button.TextSize = 20
+        button.Font = Enum.Font.SourceSans
+        
+        button.MouseButton1Click:Connect(callback)
+        
+        return button
+    end
+
+    return Library
+end
+
+return Library:new()
